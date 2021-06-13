@@ -58,14 +58,22 @@ const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
       })
     }
 
+    const generateRepoTable = () => {
+      let tableContent = chunkArray(Array.from(recentRepos), repoPerRow).map((value, row) => {
+        return `|${value.map(value => `[${value}](https://github.com/${value}) |`)}
+                |${value.map(() => ` :-: |`)}
+                |${value.map((value, col) => `<a href="https://github.com/${value}"><img src="https://github.com/${recentReposHaveImage[row * repoPerRow + col] ? value : `${username}/${repo}`}/raw/${ref}/DISPLAY.jpg" alt="${value}" title="${value}" width="${imageSize}" height="${imageSize}"></a> |`
+        )}\n\n`
+      }).toString().replace(/,/g, "");
+      if (repoCount > 0) {
+        tableContent = `---\n${tableContent}\n---\n`;
+      }
+      return tableContent;
+    }
+
     const data = core.getInput("customReadmeFile").replace(/\${\w{0,}}/g, (match) => {
       switch (match) {
-        case "${repoTable}": return chunkArray(Array.from(recentRepos), repoPerRow).map((value, row) => {
-          return `|${value.map(value => ` [${value}](https://github.com/${value}) |`)}
-|${value.map(() => ` :-: |`)}
-|${value.map((value, col) => ` <a href="https://github.com/${value}"><img src="https://github.com/${recentReposHaveImage[row * repoPerRow + col] ? value : `${username}/${repo}`}/raw/${ref}/DISPLAY.jpg" alt="${value}" title="${value}" width="${imageSize}" height="${imageSize}"></a> |`
-          )}\n\n`
-        }).toString().replace(/,/g, "");
+        case "${repoTable}": return generateRepoTable();
         case "${header}": return core.getInput('header')
         case "${subhead}": return core.getInput('subhead')
         case "${footer}": return core.getInput('footer')

@@ -49,11 +49,7 @@ inputs:
       
       ${subhead}
 
-      ---
-      
       ${repoTable}
-      
-      ---
       
       ${footer}
 
