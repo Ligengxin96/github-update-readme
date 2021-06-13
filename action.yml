@@ -1,4 +1,4 @@
-name: 'github-update-readme'
+name: 'github-update-readme-v2'
 description: 'Update your profile README.md to show your latest activity.'
 inputs:
   header:
@@ -24,7 +24,7 @@ inputs:
   repoCount:
     description: 'Number of repositories to load.'
     required: false
-    default: '6'
+    default: 0
   reposPerRow:
     description: 'Number of repositories to load per row.'
     required: false
@@ -37,7 +37,11 @@ inputs:
     description: "Types of event to exclude from the recent activity table. Read more on this repository's README.md."
     required: false
     default: '[]'
-  excludeRepo:
+  includeReposOrExcludeRepos:
+    description: "Choose include or exclude the repositories in recent activity table. (value: 'exclude' | 'include')"
+    required: false
+    default: 'exclude'
+  repos:
     description: "Repositories to exclude from the recent activity table. Read more on this repository's README.md."
     required: false
     default: '[]'

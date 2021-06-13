@@ -2,59 +2,140 @@ const core = require("@actions/core");
 const { Octokit } = require('@octokit/core')
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
+const getReadmeFile = async(url, requestOptions) => {
+  try {
+    const readme =  await octokit.request(url, requestOptions);
+    console.log('Get README.md successful.');
+    return readme;
+  } catch (e) {
+    console.error("Get README.md failed, with error: ", e.message);
+    core.setFailed("Failed: ", e.message);
+    throw new Error(e.message);
+  }
+}
+
+const getActivityData = async(url, username) => {
+  try {
+    const activityData = await octokit.request(url, { username });
+    console.log('Get activityData successful.');
+    return activityData;
+  } catch (e) {
+    console.error("Get activityData, with error: ", e.message);
+    core.setFailed("Failed: ", e.message);
+    throw new Error(e.message);
+  }
+}
+
+const updateReadme = async(url, requestOptions, repoImagsInfo, recentRepos) => {
+  try {
+    await octokit.request(url, requestOptions);
+    core.setOutput("repositories", Array.from(recentRepos), JSON.stringify(repoImagsInfo));
+    console.log('Update readme successful.');
+  } catch (e) {
+    console.error("Update readme failed with error: ", e.message);
+    core.setFailed("Failed: ", e.message);
+    throw new Error(e.message);
+  }
+}
+
+const chunkArray = (array, size) => {
+  let chunked = [];
+  let index = 0;
+  while (index < array.length) {
+    chunked.push(array.slice(index, size + index));
+    index += size;
+  }
+  return chunked;
+}
+
 (async () => {
   try {
-    const repoCount = parseInt(core.getInput('repoCount'))
-    const repoPerRow = parseInt(core.getInput('reposPerRow'))
-    const imageSize = parseInt(core.getInput('imageSize'))
-    const ref = core.getInput('ref')
+    const ref = core.getInput('ref');
+    const repoCount = parseInt(core.getInput('repoCount'));
+    const repoPerRow = parseInt(core.getInput('reposPerRow'));
+    const imageSize = parseInt(core.getInput('imageSize'));
+    const path = core.getInput('path');
+    const excludeActivity = core.getInput('excludeActivity');
+    const repos = core.getInput('repos');
+    const customReadmeFile = core.getInput("customReadmeFile");
+    const header = core.getInput('header');
+    const subhead = core.getInput('subhead');
+    const footer = core.getInput('footer');
+    const includeReposOrExcludeRepos = core.getInput('includeReposOrExcludeRepos');
+
+    const isIncludeRepos = includeReposOrExcludeRepos === 'include';
 
     const username = process.env.GITHUB_REPOSITORY.split("/")[0]
     const repo = process.env.GITHUB_REPOSITORY.split("/")[1]
-    const getReadme = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-      owner: username,
-      repo: repo,
-      path: core.getInput('path'),
-    }).catch(e => {
-      console.error("Failed: ", e)
-      core.setFailed("Failed: ", e.message)
-    })
-    const sha = getReadme.data.sha
 
-    let recentReposHaveImage = []
-    let recentRepos = new Set()
+    console.log(`Job begin at: ${new Date()}`);
+    console.log('Get README.md.')
+   
+    const readmeFiles = await getReadmeFile('GET /repos/{owner}/{repo}/contents/{path}', {
+      owner: username,
+      repo,
+      path,
+    });
+
+    const sha = readmeFiles.data.sha;
+
+    let recentReposHaveImage = [];
+    let recentRepos = new Set();
     
+    console.log(`Get recentRepos info, repoCount: ${repoCount}`);
+   
     /** GitHub Activity pagination is limited at 100 records x 3 pages */
     for (let i = 0; recentRepos.size < repoCount && i < 3; i++) {
-      console.log(i)
-      const getActivity = await octokit.request(`GET /users/{username}/events/public?per_page=100&page=${i}`, {
-        username: username,
-      }).catch(e => {
-        console.error("Failed: ", e)
-        core.setFailed("Failed: ", e.message)
-      })
-      console.log(getActivity)
-      console.log(getActivity.data)
-      for (const value of getActivity.data) {
-        console.log(value)
-        let activityRepo = value.repo.name
-        if (value.type === "ForkEvent") activityRepo = value.payload.forkee.full_name
-        if (!JSON.parse(core.getInput('excludeActivity')).includes(value.type) && !JSON.parse(core.getInput('excludeRepo')).includes(activityRepo)) {
-          recentRepos.add(activityRepo)
+      const activityData = await getActivityData(`GET /users/{username}/events/public?per_page=100&page=${i}`, username);
+      const { data = {} } = activityData;
+      for (const value of data) {
+        let activityRepo = value.repo.name;
+        if (value.type === "ForkEvent") {
+          activityRepo = value.payload.forkee.full_name;
         }
-        if (recentRepos.size >= repoCount) break
+        if (!JSON.parse(excludeActivity).includes(value.type)) {
+          if(isIncludeRepos) {
+            if (JSON.parse(repos).includes(activityRepo)) {
+              console.log(`RecentRepos add ${activityRepo}`);
+              recentRepos.add(activityRepo);
+            }
+          } else {
+            if (!JSON.parse(repos).includes(activityRepo)) {
+              console.log(`RecentRepos add ${activityRepo}`);
+              recentRepos.add(activityRepo);
+            }
+          }
+        }
+       
+        if (recentRepos.size >= repoCount) {
+          break;
+        }
       }
     }
+    
+    const repoImagsInfo = [];
 
-    for (const repo of recentRepos) {
+    if (repoCount > 0) {
+      console.log('Get repo display image.');
+    }
+    
+    for await(const repo of recentRepos) {
       await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
         owner: repo.split("/")[0],
         repo: repo.split("/")[1],
         path: 'DISPLAY.jpg',
-      }).then(() => {
-        recentReposHaveImage.push(true)
+      }).then((response) => {
+        if (response.data.name === 'DISPLAY.jpg') {
+          console.log('Get repo display image sucessful.');
+          recentReposHaveImage.push(true);
+        } else {
+          repoImagsInfo.push(`Waring: can't find 'DISPLAY.jpg' in ${repo}. Please upload 'DISPLAY.jpg'.`)
+          recentReposHaveImage.push(false);
+        }
       }).catch(e => {
-        recentReposHaveImage.push(false)
+        console.log('Get repo display image failed with error: ', e.message);
+        repoImagsInfo.push(`Waring: can't find display.jpg in ${repo}. Please upload 'DISPLAY.jpg'.`)
+        recentReposHaveImage.push(false);
       })
     }
 
@@ -71,44 +152,36 @@ const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
       return tableContent;
     }
 
-    const data = core.getInput("customReadmeFile").replace(/\${\w{0,}}/g, (match) => {
+    const readmeContentData = customReadmeFile.replace(/\${\w{0,}}/g, (match) => {
       switch (match) {
-        case "${repoTable}": return generateRepoTable();
-        case "${header}": return core.getInput('header')
-        case "${subhead}": return core.getInput('subhead')
-        case "${footer}": return core.getInput('footer')
+        case "${repoTable}": 
+          return generateRepoTable();
+        case "${header}": 
+          return header;
+        case "${subhead}": 
+          return subhead;
+        case "${footer}": 
+          return footer;
         default:
-          console.error(`${match} is not recognised`)
-          return ""
+          console.error(`${match} is not recognized`);
+          return '';
       }
-    })
+    });
 
-    await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+    console.log('readmeContentData: ', readmeContentData);
+
+    await updateReadme('PUT /repos/{owner}/{repo}/contents/{path}', {
       owner: username,
-      repo: repo,
-      path: core.getInput('path'),
+      repo,
+      path,
       message: '(Automated) Update README.md',
-      content: Buffer.from(data, "utf8").toString('base64'),
+      content: Buffer.from(readmeContentData, "utf8").toString('base64'),
       sha: sha,
-    }).then(() => {
-      core.setOutput("repositories", Array.from(recentRepos))
-    }).catch((e) => {
-      console.error("Failed: ", e)
-      core.setFailed("Failed: ", e.message)
-    })
+    }, repoImagsInfo, recentRepos);
 
+    console.log(`Job complete at: ${new Date()}`);
   } catch (e) {
-    console.error("Failed: ", e)
+    console.error("Error occrence with error: ", e.message)
     core.setFailed("Failed: ", e.message)
   }
 })()
-
-const chunkArray = (array, size) => {
-  let chunked = []
-  let index = 0
-  while (index < array.length) {
-    chunked.push(array.slice(index, size + index))
-    index += size
-  }
-  return chunked
-}

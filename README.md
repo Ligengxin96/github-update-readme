@@ -1,10 +1,10 @@
-# github-update-readme
+# github-update-readme-v2
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![Example of profile README](https://raw.githubusercontent.com/theboi/github-update-readme/main/example.png)
-
 ## About
+
+I want publish acation used by myself so, I modify the source code amd create a new repo, so that I can publish the action.
 
 This GitHub Action updates your profile README.md to show your latest activity.
 
@@ -32,7 +32,7 @@ Override the default branch/tag ref. Default `"master"`.
 
 ### `repoCount`
 
-Number of repositories to load. Default `"6"`.
+Number of repositories to load. Default `0`.
 
 ### `reposPerRow`
 
@@ -46,9 +46,16 @@ Length (in pixels) of each side of the square image. Default `"150"`.
 
 Types of event to exclude from the recent activity table in a **JSON array**. Recent events, such as `"PushEvent"` or `"ForkEvent"`, can be found at https://api.github.com/users/{username}/events, replacing `username` with your username. Example input would be `'["WatchEvent", "ForkEvent"]'`. Default `"[]"`.
 
-### `excludeRepo`
+### `includeReposOrExcludeRepos`(New feature in v2)
 
-Repositories to exclude from the recent activity table in a **JSON array**. Example input would be `'["theboi/theboi", "username/repo"]'`. Default `"[]"`.
+Choose include or exclude the repositories in recent activity table.
+- required: false
+-  value: 'exclude' | 'include'
+- default: 'exclude'
+
+### `repos`
+
+Repositories to include or exclude from the recent activity tables in a **JSON array**. Example input would be `'["theboi/theboi", "username/repo"]'`. Default `"[]"`.
 
 ### `customReadmeFile`
 
@@ -65,12 +72,8 @@ Default: |
   ## ${header}
       
   ${subhead}
-
-  ---
       
   ${repoTable}
-      
-  ---
       
   ${footer}
 ```
@@ -91,18 +94,17 @@ Array of recent repositories to be displayed on your profile README.md.
 
 ## Example usage
 
-- Article on Medium: https://medium.com/@theboi/how-to-dynamically-update-your-github-profile-readme-using-github-actions-684be5db9932
 - Create a repository named your username, add a `README.md` file.
 - Create a workflow and paste this under `steps`:
 ```yaml
-- name: Update GitHub Profile README
-  uses: theboi/github-update-readme@v1.0
+- name: github-update-readme-v2
+  uses: Ligengxin96/github-update-readme-v2@v1.2-Beta
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   with:
-    header: "Hey, I'm Ryan! 👋"
-    subhead: "Currently a student in Singapore, passionate about creating all-things-tech to improve society."
-    footer: "**Learn more about me at [ryanthe.com](https://www.ryanthe.com)!**"
+    header: "This is header content"
+    subhead: "This is subhead content"
+    footer: "This is footer content"
 ```
 - You might want to schedule this to run every 10 mins, paste this under `on`:
 ```yaml
