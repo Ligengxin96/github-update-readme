@@ -1,4 +1,4 @@
-name: 'github-update-readme-v2'
+name: 'github-update-readme-V2'
 description: 'Update your profile README.md to show your latest activity.'
 inputs:
   header:
