@@ -6,7 +6,7 @@
 
 I want publish acation used by myself so, I modify the source code amd create a new repo, so that I can publish the action.
 
-This GitHub Action updates your profile README.md to show your latest activity.
+This GitHub Action updates your repo README.md to show your latest activity.
 
 ## Inputs
 
