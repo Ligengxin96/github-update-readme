@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Current JS File",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${relativeFile}"
+    }
+  ]
+}

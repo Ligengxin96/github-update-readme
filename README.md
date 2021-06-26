@@ -50,8 +50,25 @@ Types of event to exclude from the recent activity table in a **JSON array**. Re
 
 Choose include or exclude the repositories in recent activity table.
 - required: false
--  value: 'exclude' | 'include'
+- type: `String`
+- value: 'exclude' | 'include'
 - default: 'exclude'
+
+### `showTrafficData`(New feature in v2)
+
+Show repo traffic data in readme
+- required: `false`
+- type: `Object`
+- properties: 
+  1. `show`
+      - description: whether show traffic data in readme
+      - type: `Boolean`
+      - default: `false`
+  2. `position`
+      - description: show traffic data in `subhead` or `footer`
+      - type: `String`
+      - value: `subhead` | `footer`f
+      - default: `subhead`
 
 ### `repos`
 
@@ -113,6 +130,8 @@ schedule:
 ```
 - This will now run and fetch repositories you were most recently active on, every 10 mins.
 - **Important** Add a `DISPLAY.jpg` to your repositories (including username/username) to show in the table. If image does not exist, will default to `DISPLAY.jpg` on username/username.
+
+- [Click here to see detailed example](https://github.com/Ligengxin96/FetchBingDailyImage/blob/main/.github/workflows/updateREADMEToTriggerDeploy.yml)
 
 ## Note
 

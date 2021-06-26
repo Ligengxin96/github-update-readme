@@ -41,6 +41,12 @@ inputs:
     description: "Choose include or exclude the repositories in recent activity table. (value: 'exclude' | 'include')"
     required: false
     default: 'exclude'
+  showTrafficData:
+    description: "Show repo traffic data in readme. Read more on this repository's README.md."
+    required: false
+    default: 
+      show: false
+      position: subhead
   repos:
     description: "Repositories to exclude from the recent activity table. Read more on this repository's README.md."
     required: false

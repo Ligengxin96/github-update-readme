@@ -1,5 +1,5 @@
 const core = require("@actions/core");
-const { Octokit } = require('@octokit/core')
+const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 const getReadmeFile = async(url, requestOptions) => {
@@ -61,6 +61,7 @@ const chunkArray = (array, size) => {
     const header = core.getInput('header');
     const subhead = core.getInput('subhead');
     const footer = core.getInput('footer');
+    const showTrafficData = core.getInput('showTrafficData');
     const includeReposOrExcludeRepos = core.getInput('includeReposOrExcludeRepos');
 
     const isIncludeRepos = includeReposOrExcludeRepos === 'include';
@@ -69,7 +70,7 @@ const chunkArray = (array, size) => {
     const repo = process.env.GITHUB_REPOSITORY.split("/")[1]
 
     console.log(`Job begin at: ${new Date()}`);
-    console.log('Get README.md.')
+    console.log('Get README.md.');
    
     const readmeFiles = await getReadmeFile('GET /repos/{owner}/{repo}/contents/{path}', {
       owner: username,
@@ -139,6 +140,18 @@ const chunkArray = (array, size) => {
       })
     }
 
+    console.log(`Get traffic data.`);
+
+    const [{ data: viewsData }, { data: clonesData }] = await Promise.all([
+      octokit.rest.repos.getViews({ owner: username, repo: repo, per: 'week' }),
+      octokit.rest.repos.getClones({ owner: username, repo: repo, per: 'week' })
+    ]);
+
+    delete viewsData.views;
+    delete clonesData.clones;
+
+    console.log(`Get traffic data sucessful, viewsData: ${JSON.stringify(viewsData)}, clonesData: ${JSON.stringify(clonesData)}`);
+   
     const generateRepoTable = () => {
       let tableContent = chunkArray(Array.from(recentRepos), repoPerRow).map((value, row) => {
         return `|${value.map(value => `[${value}](https://github.com/${value}) |`)}
@@ -159,8 +172,15 @@ const chunkArray = (array, size) => {
         case "${header}": 
           return header;
         case "${subhead}": 
+          if (showTrafficData.show && showTrafficData.position === 'subhead') {
+            return subhead.replace(/'{viewsData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`)
+                          .replace(/'{clonesData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`);
+          }
           return subhead;
         case "${footer}": 
+          if (showTrafficData.show && showTrafficData.position === 'footer') {
+            return footer.replace(/'{viewsData}'/g, JSON.stringify(viewsData)).replace(/'{clonesData}'/g, JSON.stringify(clonesData));
+          }
           return footer;
         default:
           console.error(`${match} is not recognized`);
