@@ -62,6 +62,7 @@ const chunkArray = (array, size) => {
     const subhead = core.getInput('subhead');
     const footer = core.getInput('footer');
     const showTrafficData = core.getInput('showTrafficData');
+    const trafficDataPosition = core.getInput('trafficDataPosition');
     const includeReposOrExcludeRepos = core.getInput('includeReposOrExcludeRepos');
 
     const isIncludeRepos = includeReposOrExcludeRepos === 'include';
@@ -172,13 +173,13 @@ const chunkArray = (array, size) => {
         case "${header}": 
           return header;
         case "${subhead}": 
-          if (showTrafficData.show && showTrafficData.position === 'subhead') {
+          if (showTrafficData === true && trafficDataPosition === 'subhead') {
             return subhead.replace(/'{viewsData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`)
                           .replace(/'{clonesData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`);
           }
           return subhead;
         case "${footer}": 
-          if (showTrafficData.show && showTrafficData.position === 'footer') {
+          if (showTrafficData === true && trafficDataPosition === 'footer') {
             return footer.replace(/'{viewsData}'/g, JSON.stringify(viewsData)).replace(/'{clonesData}'/g, JSON.stringify(clonesData));
           }
           return footer;

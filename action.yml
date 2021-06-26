@@ -44,9 +44,11 @@ inputs:
   showTrafficData:
     description: "Show repo traffic data in readme. Read more on this repository's README.md."
     required: false
-    default: 
-      show: false
-      position: subhead
+    default: false
+  trafficDataPosition:
+    description: "Show repo traffic data in 'subhead' or 'footer'"
+    required: false
+    default: 'subhead'
   repos:
     description: "Repositories to exclude from the recent activity table. Read more on this repository's README.md."
     required: false

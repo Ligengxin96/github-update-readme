@@ -51,24 +51,22 @@ Types of event to exclude from the recent activity table in a **JSON array**. Re
 Choose include or exclude the repositories in recent activity table.
 - required: false
 - type: `String`
-- value: 'exclude' | 'include'
-- default: 'exclude'
+- value: `exclude` | `include`
+- default: `exclude`
 
 ### `showTrafficData`(New feature in v2)
 
-Show repo traffic data in readme
+Whether show repo traffic data in readme
 - required: `false`
-- type: `Object`
-- properties: 
-  1. `show`
-      - description: whether show traffic data in readme
-      - type: `Boolean`
-      - default: `false`
-  2. `position`
-      - description: show traffic data in `subhead` or `footer`
-      - type: `String`
-      - value: `subhead` | `footer`f
-      - default: `subhead`
+- type: `Boolean`
+- default: `false`
+
+### `trafficDataPosition`(New feature in v2)
+
+Show traffic data in `subhead` or `footer`
+- type: `String`
+- value: `subhead` | `footer`
+- default: `subhead`
 
 ### `repos`
 
