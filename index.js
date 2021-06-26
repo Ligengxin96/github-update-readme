@@ -175,12 +175,13 @@ const chunkArray = (array, size) => {
         case "${subhead}": 
           if (showTrafficData && trafficDataPosition === 'subhead') {
             return subhead.replace(/'{viewsData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`)
-                          .replace(/'{clonesData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`);
+                          .replace(/'{clonesData}'/g, `{count: ${clonesData.count}, uniques: ${clonesData.uniques}}`);
           }
           return subhead;
         case "${footer}": 
           if (showTrafficData && trafficDataPosition === 'footer') {
-            return footer.replace(/'{viewsData}'/g, JSON.stringify(viewsData)).replace(/'{clonesData}'/g, JSON.stringify(clonesData));
+            return footer.replace(/'{viewsData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`)
+                         .replace(/'{clonesData}'/g, `{count: ${clonesData.count}, uniques: ${clonesData.uniques}}`);
           }
           return footer;
         default:
