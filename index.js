@@ -174,14 +174,14 @@ const chunkArray = (array, size) => {
           return header;
         case "${subhead}": 
           if (showTrafficData && trafficDataPosition === 'subhead') {
-            return subhead.replace(/'{viewsData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`)
-                          .replace(/'{clonesData}'/g, `{count: ${clonesData.count}, uniques: ${clonesData.uniques}}`);
+            return subhead.replace(/'{viewsData}'/g, `{ count: ${viewsData.count}, uniques: ${viewsData.uniques} }`)
+                          .replace(/'{clonesData}'/g, `{ count: ${clonesData.count}, uniques: ${clonesData.uniques} }`);
           }
           return subhead;
         case "${footer}": 
           if (showTrafficData && trafficDataPosition === 'footer') {
-            return footer.replace(/'{viewsData}'/g, `{count: ${viewsData.count}, uniques: ${viewsData.uniques}}`)
-                         .replace(/'{clonesData}'/g, `{count: ${clonesData.count}, uniques: ${clonesData.uniques}}`);
+            return footer.replace(/'{viewsData}'/g, `{ count: ${viewsData.count}, uniques: ${viewsData.uniques} }`)
+                         .replace(/'{clonesData}'/g, `{ count: ${clonesData.count}, uniques: ${clonesData.uniques} }`);
           }
           return footer;
         default:
