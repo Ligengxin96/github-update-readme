@@ -66,8 +66,8 @@ const chunkArray = (array, size) => {
 
     const isIncludeRepos = includeReposOrExcludeRepos === 'include';
 
-    const username = process.env.GITHUB_REPOSITORY.split("/")[0]
-    const repo = process.env.GITHUB_REPOSITORY.split("/")[1]
+    const username = process.env.GITHUB_REPOSITORY.split("/")[0];
+    const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
 
     console.log(`Job begin at: ${new Date()}`);
     console.log('Get README.md.');
@@ -82,7 +82,7 @@ const chunkArray = (array, size) => {
 
     let recentReposHaveImage = [];
     let recentRepos = new Set();
-    
+
     console.log(`Get recentRepos info, repoCount: ${repoCount}`);
    
     /** GitHub Activity pagination is limited at 100 records x 3 pages */
