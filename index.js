@@ -166,6 +166,12 @@ const chunkArray = (array, size) => {
       return tableContent;
     }
 
+    console.log('showTrafficData:', showTrafficData)
+    console.log('trafficDataPosition:', trafficDataPosition)
+    console.log('replace subhead condition:', showTrafficData === true && trafficDataPosition === 'subhead')
+
+    console.log("subhead:", subhead);
+
     const readmeContentData = customReadmeFile.replace(/\${\w{0,}}/g, (match) => {
       switch (match) {
         case "${repoTable}": 
