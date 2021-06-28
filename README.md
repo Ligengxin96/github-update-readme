@@ -63,7 +63,7 @@ Whether show repo traffic data in readme
 
 ### `trafficDataPosition`(New feature in v2)
 
-Show traffic data in `subhead` or `footer`
+Show last 14 days repo traffic data in `subhead` or `footer`
 - type: `String`
 - value: `subhead` | `footer`
 - default: `subhead`
