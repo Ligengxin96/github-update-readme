@@ -56,7 +56,7 @@ Choose include or exclude the repositories in recent activity table.
 
 ### `showTrafficData`(New feature in v2)
 
-Whether show repo traffic data in readme
+Whether show last 14 days repo in readme
 - required: `false`
 - type: `Boolean`
 - default: `false`
