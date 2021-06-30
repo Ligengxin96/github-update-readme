@@ -1,4 +1,5 @@
 const core = require("@actions/core");
+const axios = require("axios");
 const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
@@ -48,6 +49,30 @@ const chunkArray = (array, size) => {
   return chunked;
 }
 
+const getTrafficData = async(reponame) => {
+  console.log(`Get traffic data.`);
+  try {
+    let tryCount = 0;
+    return new Promise((resolve) => {
+      const timer = setInterval(async() => {
+        const response = await axios.get(`http://getrepootrafficdata.herokuapp.com/v1/getrepoinfo/${reponame}?aggregate=true`);
+        console.log(`Fetch traffic data ${tryCount + 1} times.`);
+        if (++tryCount === 6) {
+          clearInterval(timer);
+          throw new Error('No response from server, please check your server health.');
+        }
+        if (response?.data?.isSuccess) {
+          clearInterval(timer);
+          resolve(response.data.data);
+        }
+      }, (tryCount + 1) * 10 * 1000);
+    });
+  } catch (error) {
+    clearInterval(timer);
+    throw error;
+  }
+}
+
 (async () => {
   try {
     const ref = core.getInput('ref');
@@ -71,6 +96,19 @@ const chunkArray = (array, size) => {
     const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
 
     console.log(`Job begin at: ${new Date()}`);
+
+    let viewsData = {};
+    let clonesData = {};
+    try {
+      const response = await getTrafficData(repo);
+      viewsData = response.viewsData[0];
+      clonesData = response.clonesData[0];
+    } catch (error) {
+      console.error(error.message);
+    }
+
+    console.log(`Get traffic data sucessful, viewsData: ${JSON.stringify(viewsData)}, clonesData: ${JSON.stringify(clonesData)}`);
+
     console.log('Get README.md.');
    
     const readmeFiles = await getReadmeFile('GET /repos/{owner}/{repo}/contents/{path}', {
@@ -141,18 +179,6 @@ const chunkArray = (array, size) => {
       })
     }
 
-    console.log(`Get traffic data.`);
-
-    const [{ data: viewsData }, { data: clonesData }] = await Promise.all([
-      octokit.rest.repos.getViews({ owner: username, repo: repo, per: 'week' }),
-      octokit.rest.repos.getClones({ owner: username, repo: repo, per: 'week' })
-    ]);
-
-    delete viewsData.views;
-    delete clonesData.clones;
-
-    console.log(`Get traffic data sucessful, viewsData: ${JSON.stringify(viewsData)}, clonesData: ${JSON.stringify(clonesData)}`);
-   
     const generateRepoTable = () => {
       let tableContent = chunkArray(Array.from(recentRepos), repoPerRow).map((value, row) => {
         return `|${value.map(value => `[${value}](https://github.com/${value}) |`)}
@@ -172,16 +198,20 @@ const chunkArray = (array, size) => {
           return generateRepoTable();
         case "${header}": 
           return header;
-        case "${subhead}": 
+        case "${subhead}":
           if (showTrafficData && trafficDataPosition === 'subhead') {
-            return subhead.replace(/'{viewsData}'/g, `{ count: ${viewsData.count}, uniques: ${viewsData.uniques} }`)
-                          .replace(/'{clonesData}'/g, `{ count: ${clonesData.count}, uniques: ${clonesData.uniques} }`);
+            return subhead.replace(/'{repo}'/g, repo)
+                          .replace(/'{startDate}'/g, viewsData.startDate).replace(/'{endDate}'/g, viewsData.endDate)
+                          .replace(/'{viewsData}'/g, `{ count: ${viewsData.countTotal}, uniques: ${viewsData.uniquesTotal} }`)
+                          .replace(/'{clonesData}'/g, `{ count: ${clonesData.countTotal}, uniques: ${clonesData.uniquesTotal} }`);
           }
           return subhead;
         case "${footer}": 
           if (showTrafficData && trafficDataPosition === 'footer') {
-            return footer.replace(/'{viewsData}'/g, `{ count: ${viewsData.count}, uniques: ${viewsData.uniques} }`)
-                         .replace(/'{clonesData}'/g, `{ count: ${clonesData.count}, uniques: ${clonesData.uniques} }`);
+            return footer.replace(/'{repo}'/g, repo)
+                          .replace(/'{startDate}'/g, viewsData.startDate).replace(/'{endDate}'/g, viewsData.endDate)
+                          .replace(/'{viewsData}'/g, `{ count: ${viewsData.countTotal}, uniques: ${viewsData.uniquesTotal} }`)
+                          .replace(/'{clonesData}'/g, `{ count: ${clonesData.countTotal}, uniques: ${clonesData.uniquesTotal} }`);
           }
           return footer;
         default:
